@@ -2,9 +2,11 @@ package bencode
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
+	"sort"
 	"strconv"
 	"sync"
 )
@@ -20,6 +22,25 @@ type BencodeValue struct {
 }
 
 type BencodeType int
+
+type BencodeDictPair struct {
+	key   string
+	value BencodeValue
+}
+
+type BencodeDictPairSlice []BencodeDictPair
+
+func (a BencodeDictPairSlice) Len() int {
+	return len(a)
+}
+
+func (a BencodeDictPairSlice) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a BencodeDictPairSlice) Less(i, j int) bool {
+	return a[i].key < a[j].key
+}
 
 const (
 	IntegerType BencodeType = iota
@@ -315,4 +336,123 @@ func decodeInt64(reader *bufio.Reader, delim byte) (int64, error) {
 
 	log.Error().Err(err).Msg("invalid integer")
 	return 0, fmt.Errorf("invalid integer")
+}
+
+func (v *BencodeValue) Encode(buffer *bytes.Buffer) error {
+
+	var err error
+
+	switch v.Type {
+	case IntegerType:
+		_, err = fmt.Fprintf(buffer, "i%de", v.Int)
+	case UnsignedIntegerType:
+		_, err = fmt.Fprintf(buffer, "i%de", v.Uint)
+	case StringType:
+		_, err = fmt.Fprintf(buffer, "%d:%s", len(v.Str), v.Str)
+	case ListType:
+		buffer.WriteByte('l')
+		for _, v := range v.List {
+			if err := v.Encode(buffer); err != nil {
+				return err
+			}
+		}
+		buffer.WriteByte('e')
+	case DictType:
+		buffer.WriteByte('d')
+
+		keys := make([]string, len(v.Dict))
+
+		for k := range v.Dict {
+			keys = append(keys, k)
+		}
+
+		bencodeDictPairSlice := make(BencodeDictPairSlice, len(keys))
+
+		for i, key := range keys {
+			bencodeDictPairSlice[i] = BencodeDictPair{key, v.Dict[key]}
+			bencodeDictPairSlice[i] = BencodeDictPair{key, v.Dict[key]}
+		}
+
+		sort.Sort(bencodeDictPairSlice)
+
+		for _, sv := range bencodeDictPairSlice {
+			if sv.value.IsValueEmpty() {
+				continue
+			}
+
+			_, err = fmt.Fprintf(buffer, "%d:%s", len(sv.key), sv.key)
+
+			if err != nil {
+				break
+			}
+
+			if err = sv.value.Encode(buffer); err != nil {
+				break
+			}
+		}
+
+		buffer.WriteByte('e')
+	default:
+		err = fmt.Errorf("unsupported bencode type: %v", v.Type)
+	}
+
+	return err
+}
+
+func (v BencodeValue) Equals(other BencodeValue) bool {
+	if v.Type != other.Type {
+		return false
+	}
+
+	switch v.Type {
+	case IntegerType:
+		return v.Int == other.Int
+	case UnsignedIntegerType:
+		return v.Uint == other.Uint
+	case FloatType:
+		return v.Float == other.Float
+	case StringType:
+		return v.Str == other.Str
+	case ListType:
+		if len(v.List) != len(other.List) {
+			return false
+		}
+		for i := range v.List {
+			if !v.List[i].Equals(other.List[i]) {
+				return false
+			}
+		}
+		return true
+	case DictType:
+		if len(v.Dict) != len(other.Dict) {
+			return false
+		}
+		for k, vVal := range v.Dict {
+			if otherVal, ok := other.Dict[k]; !ok || !vVal.Equals(otherVal) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func (v *BencodeValue) IsValueEmpty() bool {
+	switch v.Type {
+	case IntegerType:
+		return v.Int == 0
+	case UnsignedIntegerType:
+		return v.Uint == 0
+	case FloatType:
+		return v.Float == 0
+	case StringType:
+		return v.Str == ""
+	case ListType:
+		return v.List == nil || len(v.List) == 0
+	case DictType:
+		return v.Dict == nil || len(v.Dict) == 0
+	default:
+		return false
+	}
 }
