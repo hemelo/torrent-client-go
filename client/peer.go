@@ -1,4 +1,4 @@
-package peers
+package client
 
 import (
 	"encoding/binary"

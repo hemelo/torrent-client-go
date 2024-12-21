@@ -2,7 +2,7 @@ package torrent
 
 import (
 	"Torrent-Client/bencode"
-	"Torrent-Client/peers"
+	"Torrent-Client/client"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const defaultHTTPTimeout = 30 * time.Second
+const defaultTrackerTimeout = 30 * time.Second
 
 type TrackerResponse struct {
 	Interval int
@@ -24,7 +24,10 @@ type BencodeToTrackerResponseOpts struct {
 }
 
 // Builds the tracker URL for the torrent file
-func (t *TorrentFile) buildTrackerUrl(peerID [20]byte, port uint16) (string, error) {
+func (t *TorrentFile) BuildTrackerUrl(peerID [20]byte, port uint16) (string, error) {
+
+	log.Debug().Msg("building tracker URL")
+
 	base, err := url.Parse(t.Announce)
 
 	if err != nil {
@@ -50,6 +53,9 @@ func (t *TorrentFile) buildTrackerUrl(peerID [20]byte, port uint16) (string, err
 	}
 
 	base.RawQuery = params.Encode()
+
+	log.Debug().Str("url", base.String()).Msg("tracker URL")
+
 	return base.String(), nil
 }
 
@@ -60,16 +66,16 @@ func (t *TorrentFile) buildTrackerUrl(peerID [20]byte, port uint16) (string, err
 // Each peer is a dictionary containing the IP address and port number
 // It's made of 6 bytes for the IP address and 2 bytes for the port number
 // Big-endian notation is used for both the IP address and port number
-func (t *TorrentFile) requestPeers(peerID [20]byte, port uint16) ([]peers.Peer, error) {
+func (t *TorrentFile) RequestPeers(peerID [20]byte, port uint16) ([]client.Peer, error) {
 
-	url, err := t.buildTrackerUrl(peerID, port)
+	url, err := t.BuildTrackerUrl(peerID, port)
 
 	if err != nil {
 		log.Error().Err(err).Msg("could not build tracker URL to request peers")
 		return nil, err
 	}
 
-	c := &http.Client{Timeout: defaultHTTPTimeout}
+	c := &http.Client{Timeout: defaultTrackerTimeout}
 
 	resp, err := c.Get(url)
 
@@ -99,7 +105,7 @@ func (t *TorrentFile) requestPeers(peerID [20]byte, port uint16) ([]peers.Peer, 
 		return nil, err
 	}
 
-	return peers.DecodePeers([]byte(trackerResponse.Peers))
+	return client.DecodePeers([]byte(trackerResponse.Peers))
 }
 
 func BencodeToTrackerResponse(result bencode.BencodeValue, opts BencodeToTrackerResponseOpts) (TrackerResponse, error) {
