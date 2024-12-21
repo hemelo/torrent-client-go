@@ -1,6 +1,7 @@
-package torrent
+package tests
 
 import (
+	torrent2 "Torrent-Client/torrent"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -32,7 +33,7 @@ func TestBuildTrackerUrl(t *testing.T) {
 		infoHash[i] = byte(rand.Intn(100))
 	}
 
-	torrent := TorrentFile{
+	torrent := torrent2.TorrentFile{
 		PieceLength: 262144,
 		Length:      351272960,
 		Name:        "debian-10.2.0-amd64-netinst.iso",
@@ -49,7 +50,7 @@ func TestBuildTrackerUrl(t *testing.T) {
 		port,
 	)
 
-	trackerURL, err := torrent.buildTrackerUrl(peerID, port)
+	trackerURL, err := torrent.BuildTrackerUrl(peerID, port)
 
 	assert.Nil(t, err, "Failed to build tracker URL")
 	assert.Equal(t, expected, trackerURL, "Unexpected tracker URL")

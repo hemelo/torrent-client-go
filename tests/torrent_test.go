@@ -1,26 +1,27 @@
-package torrent
+package tests
 
 import (
 	"Torrent-Client/bencode"
+	"Torrent-Client/torrent"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestNewTorrentFrom(t *testing.T) {
-	_, err := NewTorrentFrom("../test_data/demo.torrent")
+	_, err := torrent.NewTorrentFrom("../test_data/demo.torrent")
 	require.NoError(t, err, "Failed to load torrent from file")
 }
 
 func TestMissingFile(t *testing.T) {
-	_, err := NewTorrentFrom("../test_data/missing.torrent")
+	_, err := torrent.NewTorrentFrom("../test_data/missing.torrent")
 	require.Error(t, err, "Expected error when file is missing")
 }
 
 func TestWithoutParse(t *testing.T) {
 	tests := map[string]struct {
 		input  *bencode.BencodeValue
-		output TorrentFile
+		output torrent.TorrentFile
 		fails  bool
 	}{
 		"correct conversion": {
@@ -42,7 +43,7 @@ func TestWithoutParse(t *testing.T) {
 				},
 				Type: bencode.DictType,
 			},
-			output: TorrentFile{
+			output: torrent.TorrentFile{
 				Comment:      "\"Debian CD from cdimage.debian.org\"",
 				Announce:     "http://bttracker.debian.org:6969/announce",
 				CreatedBy:    "mktorrent 1.1",
@@ -61,7 +62,7 @@ func TestWithoutParse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		to, err := BencodeToTorrentFile(*test.input, BencodeToTorrentFileOpts{from: "test"})
+		to, err := torrent.BencodeToTorrentFile(*test.input, torrent.BencodeToTorrentFileOpts{From: "test"})
 
 		if test.fails {
 			assert.NotNil(t, err)

@@ -1,22 +1,25 @@
-package peers
+package tests
 
-import "testing"
+import (
+	"Torrent-Client/client"
+	"testing"
+)
 
 func TestDecodePeers(t *testing.T) {
 	// Test case where the peers data is empty
-	peers, err := DecodePeers([]byte{})
+	peers, err := client.DecodePeers([]byte{})
 	if err == nil {
 		t.Fatalf("Expected an error, got nil")
 	}
 
 	// Test case where the peers data is malformed
-	peers, err = DecodePeers([]byte{1, 2, 3, 4, 5})
+	peers, err = client.DecodePeers([]byte{1, 2, 3, 4, 5})
 	if err == nil {
 		t.Fatalf("Expected an error, got nil")
 	}
 
 	// Test case where the peers data is correct
-	peers, err = DecodePeers([]byte{192, 168, 1, 1, 0, 80})
+	peers, err = client.DecodePeers([]byte{192, 168, 1, 1, 0, 80})
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -32,4 +35,5 @@ func TestDecodePeers(t *testing.T) {
 	if peers[0].Port != 80 {
 		t.Fatalf("Expected port to be 80")
 	}
+
 }

@@ -24,7 +24,7 @@ type TorrentFile struct {
 }
 
 type BencodeToTorrentFileOpts struct {
-	from string
+	From string
 }
 
 func NewTorrentFrom(path string) (TorrentFile, error) {
@@ -49,13 +49,13 @@ func NewTorrentFrom(path string) (TorrentFile, error) {
 		return TorrentFile{}, err
 	}
 
-	return BencodeToTorrentFile(result, BencodeToTorrentFileOpts{from: path})
+	return BencodeToTorrentFile(result, BencodeToTorrentFileOpts{From: path})
 }
 
 func BencodeToTorrentFile(result bencode.BencodeValue, opts BencodeToTorrentFileOpts) (TorrentFile, error) {
 	// Check the parsed result
 	if result.Type != bencode.DictType {
-		log.Error().Str("from", opts.from).Msg("expected DictType")
+		log.Error().Str("from", opts.From).Msg("expected DictType")
 		return TorrentFile{}, fmt.Errorf("expected DictType, got %v", result.Type)
 	}
 
@@ -63,46 +63,46 @@ func BencodeToTorrentFile(result bencode.BencodeValue, opts BencodeToTorrentFile
 	announce, ok := result.Dict["announce"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing announce URL")
+		log.Error().Str("from", opts.From).Msg("missing announce URL")
 		return TorrentFile{}, fmt.Errorf("missing announce URL")
 	} else if announce.Type != bencode.StringType {
-		log.Error().Str("from", opts.from).Msg("announce URL is not a string")
+		log.Error().Str("from", opts.From).Msg("announce URL is not a string")
 		return TorrentFile{}, fmt.Errorf("announce URL is not a string")
 	} else {
-		log.Debug().Str("from", opts.from).Str("announce", announce.Str).Msg("announce URL")
+		log.Debug().Str("from", opts.From).Str("announce", announce.Str).Msg("announce URL")
 	}
 
 	creationDate, ok := result.Dict["creation date"]
 
 	if !ok {
-		log.Debug().Str("from", opts.from).Msg("missing creation date")
+		log.Debug().Str("from", opts.From).Msg("missing creation date")
 	} else if creationDate.Type != bencode.IntegerType {
-		log.Error().Str("from", opts.from).Msg("creation date is not an integer")
+		log.Error().Str("from", opts.From).Msg("creation date is not an integer")
 		return TorrentFile{}, fmt.Errorf("creation date is not an integer")
 	} else {
-		log.Debug().Str("from", opts.from).Int64("creation date", creationDate.Int).Msg("creation date")
+		log.Debug().Str("from", opts.From).Int64("creation date", creationDate.Int).Msg("creation date")
 	}
 
 	createdBy, ok := result.Dict["created by"]
 
 	if !ok {
-		log.Debug().Str("from", opts.from).Msg("missing created by")
+		log.Debug().Str("from", opts.From).Msg("missing created by")
 	} else if createdBy.Type != bencode.StringType {
-		log.Error().Str("from", opts.from).Msg("created by is not a string")
+		log.Error().Str("from", opts.From).Msg("created by is not a string")
 		return TorrentFile{}, fmt.Errorf("created by is not a string")
 	} else {
-		log.Debug().Str("from", opts.from).Str("created by", createdBy.Str).Msg("created by")
+		log.Debug().Str("from", opts.From).Str("created by", createdBy.Str).Msg("created by")
 	}
 
 	comment, ok := result.Dict["comment"]
 
 	if !ok {
-		log.Debug().Str("from", opts.from).Msg("missing comment")
+		log.Debug().Str("from", opts.From).Msg("missing comment")
 	} else if comment.Type != bencode.StringType {
-		log.Error().Str("from", opts.from).Msg("comment is not a string")
+		log.Error().Str("from", opts.From).Msg("comment is not a string")
 		return TorrentFile{}, fmt.Errorf("comment is not a string")
 	} else {
-		log.Debug().Str("from", opts.from).Str("comment", comment.Str).Msg("comment")
+		log.Debug().Str("from", opts.From).Str("comment", comment.Str).Msg("comment")
 	}
 
 	//...
@@ -111,75 +111,75 @@ func BencodeToTorrentFile(result bencode.BencodeValue, opts BencodeToTorrentFile
 	info, ok := result.Dict["info"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing info")
+		log.Error().Str("from", opts.From).Msg("missing info")
 		return TorrentFile{}, fmt.Errorf("missing info")
 	} else if info.Type != bencode.DictType {
-		log.Error().Str("from", opts.from).Msg("info is not a dictionary")
+		log.Error().Str("from", opts.From).Msg("info is not a dictionary")
 		return TorrentFile{}, fmt.Errorf("info is not a dictionary")
 	} else {
-		log.Debug().Str("from", opts.from).Msg("info dictionary")
+		log.Debug().Str("from", opts.From).Msg("info dictionary")
 	}
 
 	// Check the name field in the info dictionary
 	name, ok := info.Dict["name"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing name")
+		log.Error().Str("from", opts.From).Msg("missing name")
 		return TorrentFile{}, fmt.Errorf("missing name")
 	} else if name.Type != bencode.StringType {
-		log.Error().Str("from", opts.from).Msg("name is not a string")
+		log.Error().Str("from", opts.From).Msg("name is not a string")
 		return TorrentFile{}, fmt.Errorf("name is not a string")
 	} else {
-		log.Debug().Str("from", opts.from).Str("name", name.Str).Msg("name")
+		log.Debug().Str("from", opts.From).Str("name", name.Str).Msg("name")
 	}
 
 	length, ok := info.Dict["length"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing length")
+		log.Error().Str("from", opts.From).Msg("missing length")
 	} else if length.Type != bencode.IntegerType {
-		log.Error().Str("from", opts.from).Msg("length is not an integer")
+		log.Error().Str("from", opts.From).Msg("length is not an integer")
 		return TorrentFile{}, fmt.Errorf("length is not an integer")
 	} else {
-		log.Debug().Str("from", opts.from).Int64("length", length.Int).Msg("length")
+		log.Debug().Str("from", opts.From).Int64("length", length.Int).Msg("length")
 	}
 
 	// Check the piece length
 	pieceLength, ok := info.Dict["piece length"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing piece length")
+		log.Error().Str("from", opts.From).Msg("missing piece length")
 		return TorrentFile{}, fmt.Errorf("missing piece length")
 	} else if pieceLength.Type != bencode.IntegerType {
-		log.Error().Str("from", opts.from).Msg("piece length is not an integer")
+		log.Error().Str("from", opts.From).Msg("piece length is not an integer")
 		return TorrentFile{}, fmt.Errorf("piece length is not an integer")
 	} else {
-		log.Debug().Str("from", opts.from).Int64("piece length", pieceLength.Int).Msg("piece length")
+		log.Debug().Str("from", opts.From).Int64("piece length", pieceLength.Int).Msg("piece length")
 	}
 
 	// Check the pieces field
 	pieces, ok := info.Dict["pieces"]
 
 	if !ok {
-		log.Error().Str("from", opts.from).Msg("missing pieces")
+		log.Error().Str("from", opts.From).Msg("missing pieces")
 	} else if pieces.Type != bencode.StringType {
-		log.Error().Str("from", opts.from).Msg("pieces is not a string")
+		log.Error().Str("from", opts.From).Msg("pieces is not a string")
 		return TorrentFile{}, fmt.Errorf("pieces is not a string")
 	} else {
-		log.Debug().Str("from", opts.from).Msg("pieces")
+		log.Debug().Str("from", opts.From).Msg("pieces")
 	}
 
 	piecesHashes, err := splitPiecesInHashes(pieces)
 
 	if err != nil {
-		log.Error().Err(err).Str("from", opts.from).Msg("failed to split pieces in hashes")
+		log.Error().Err(err).Str("from", opts.From).Msg("failed to split pieces in hashes")
 		return TorrentFile{}, err
 	}
 
 	infoHash, err := hashInfo(info)
 
 	if err != nil {
-		log.Error().Err(err).Str("from", opts.from).Msg("failed to hash info")
+		log.Error().Err(err).Str("from", opts.From).Msg("failed to hash info")
 		return TorrentFile{}, err
 	}
 
@@ -231,4 +231,25 @@ func splitPiecesInHashes(pieces bencode.BencodeValue) ([][20]byte, error) {
 	}
 
 	return hashes, nil
+}
+
+// CalculateBoundsForPiece calculates the start and end bounds for a piece
+// Bounds means the start and end offsets in the file
+// The start offset is the piece index multiplied by the piece length
+// The end offset is the start offset plus the piece length
+func (t *TorrentFile) CalculateBoundsForPiece(index int) (int64, int64) {
+	start := int64(index) * t.PieceLength
+	end := start + t.PieceLength
+
+	if end > t.Length {
+		end = t.Length
+	}
+
+	return start, end
+}
+
+// CalculatePieceSize calculates the size of a piece
+func (t *TorrentFile) CalculatePieceSize(index int) int64 {
+	start, end := t.CalculateBoundsForPiece(index)
+	return end - start
 }

@@ -1,4 +1,4 @@
-package peers
+package client
 
 import (
 	"encoding/binary"
@@ -41,8 +41,4 @@ func DecodePeers(bytes []byte) ([]Peer, error) {
 
 func (p Peer) Address() string {
 	return net.JoinHostPort(p.IP.String(), strconv.Itoa(int(p.Port)))
-}
-
-func (p Peer) String() string {
-	return p.Address()
 }
